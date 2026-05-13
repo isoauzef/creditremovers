@@ -15,6 +15,21 @@ require_var() {
   fi
 }
 
+wait_for_http() {
+  local url="$1"
+  local label="$2"
+
+  for attempt in $(seq 1 30); do
+    if curl --fail --silent --show-error "$url" >/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+
+  echo "[deploy] Timed out waiting for $label at $url" >&2
+  return 1
+}
+
 ensure_linked_dir() {
   local shared_dir="$1"
   local app_path="$2"
@@ -72,6 +87,6 @@ npx prisma migrate deploy
 npm run build
 pm2 startOrReload ecosystem.config.cjs --only "$APP_NAME" --env production --update-env
 pm2 save --force
-curl --fail --silent --show-error "http://127.0.0.1:$APP_PORT/api/health" >/dev/null
+wait_for_http "http://127.0.0.1:$APP_PORT/api/health" "local health check"
 
 echo "[deploy] Completed successfully."

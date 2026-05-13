@@ -15,6 +15,21 @@ require_var() {
   fi
 }
 
+wait_for_http() {
+  local url="$1"
+  local label="$2"
+
+  for attempt in $(seq 1 30); do
+    if curl --fail --silent --show-error "$url" >/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+
+  echo "[bootstrap] Timed out waiting for $label at $url" >&2
+  return 1
+}
+
 ensure_repo() {
   if [ -d "$APP_ROOT/.git" ]; then
     git -C "$APP_ROOT" fetch origin "$BRANCH"
@@ -169,7 +184,7 @@ seed_if_empty
 npm run build
 pm2 startOrReload ecosystem.config.cjs --only "$APP_NAME" --env production --update-env
 pm2 save --force
-curl --fail --silent --show-error "http://127.0.0.1:$APP_PORT/api/health" >/dev/null
+wait_for_http "http://127.0.0.1:$APP_PORT/api/health" "local health check"
 
 write_http_nginx_config
 ln -sfn "$NGINX_CONFIG_PATH" "$NGINX_ENABLED_PATH"
@@ -188,6 +203,6 @@ fi
 write_https_nginx_config
 nginx -t
 systemctl reload nginx
-curl --fail --silent --show-error "https://$APP_DOMAIN/api/health" >/dev/null
+wait_for_http "https://$APP_DOMAIN/api/health" "public health check"
 
 echo "[bootstrap] Completed successfully."
