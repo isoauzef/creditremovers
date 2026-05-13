@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: creditremovers-production
+  group: creditremovers-deploy
   cancel-in-progress: true
 
 jobs:
@@ -43,9 +43,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
         run: |
-          cat > /tmp/creditremovers.env <<'EOF'
-          ${PROD_ENV_FILE}
-          EOF
+          printf '%s' "$PROD_ENV_FILE" > /tmp/creditremovers.env
           PROD_ENV_FILE_B64="$(base64 -w0 /tmp/creditremovers.env)"
 
           remote_env=()
