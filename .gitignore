@@ -2,6 +2,7 @@
 /build
 .env
 .env.backup
+.github-keys/
 server/data/contact-submissions.json
 private-uploads/
 deploy-prod.patch
