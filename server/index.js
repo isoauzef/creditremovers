@@ -166,6 +166,7 @@ app.get("/api/page-content/:page", async (req, res) => {
     const rows = await prisma.pageContent.findMany({ where: { page: req.params.page } });
     const result = {};
     for (const r of rows) result[r.section] = r.content;
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
     return res.json(result);
   } catch {
     return res.status(500).json({ message: "Failed to load" });

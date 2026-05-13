@@ -3,6 +3,18 @@ import { useState, useEffect } from "react";
 type MediaMap = Record<string, string>;
 
 const cache: { data?: MediaMap; promise?: Promise<MediaMap> } = {};
+const listeners = new Set<(m: MediaMap) => void>();
+
+/** Drop the in-memory media cache and notify every active `useMedia` consumer
+ *  so admin-driven content updates take effect without a hard page refresh. */
+export function invalidateMediaCache(): void {
+  delete cache.data;
+  delete cache.promise;
+  // Kick a fresh fetch and broadcast results to every mounted hook.
+  fetchAssets().then((data) => {
+    listeners.forEach((cb) => cb(data));
+  });
+}
 
 // Default fallbacks pointing to the Leonardo.ai assets dropped into public/uploads
 export const MEDIA_DEFAULTS: MediaMap = {
@@ -53,8 +65,10 @@ export function useMedia(): MediaMap {
   const [m, setM] = useState<MediaMap>(() => cache.data || MEDIA_DEFAULTS);
   useEffect(() => {
     let cancelled = false;
+    const cb = (data: MediaMap) => { if (!cancelled) setM(data); };
+    listeners.add(cb);
     fetchAssets().then((data) => { if (!cancelled) setM(data); });
-    return () => { cancelled = true; };
+    return () => { cancelled = true; listeners.delete(cb); };
   }, []);
   return m;
 }

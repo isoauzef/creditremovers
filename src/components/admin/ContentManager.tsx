@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAdminAuth } from "../../hooks/useAdmin";
 import { Save, RefreshCw, ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { MEDIA_DEFAULTS, invalidateMediaCache } from "../../hooks/useMedia";
 
 /* ── types ────────────────────────────────────────────────────── */
 type SectionData = Record<string, any>;
@@ -164,7 +165,15 @@ export default function ContentManager() {
     if (expanded === key) { setExpanded(null); return; }
     setExpanded(key);
     const content = pageData[page]?.[section];
-    setEditData(content && typeof content === "object" ? JSON.parse(JSON.stringify(content)) : {});
+    const base = content && typeof content === "object" ? JSON.parse(JSON.stringify(content)) : {};
+    // For the media library, pre-fill missing keys with built-in defaults so
+    // every slot shows a preview even before it has been customised.
+    if (page === "media" && section === "assets") {
+      for (const k of Object.keys(MEDIA_DEFAULTS)) {
+        if (!base[k]) base[k] = MEDIA_DEFAULTS[k];
+      }
+    }
+    setEditData(base);
     setMsg("");
   };
 
@@ -195,6 +204,7 @@ export default function ContentManager() {
       });
       if (!res.ok) throw new Error("Save failed");
       setMsg("Saved!");
+      if (page === "media") invalidateMediaCache();
       loadAll();
     } catch (e: any) {
       setMsg(e.message || "Save failed");
