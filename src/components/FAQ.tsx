@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
-import { useMediaSrc } from "../hooks/useMedia";
 
 const ITEMS = [
   {
@@ -17,7 +16,7 @@ const ITEMS = [
   },
   {
     q: "How long does it take?",
-    a: "Bureaus have 30 days to respond to each dispute. Most clients see their first round of updates within 30–45 days. Comprehensive cleanups typically run 4–6 months.",
+    a: "Bureaus have 30 days to respond to each dispute. Most clients see their first round of updates within 30–45 days. The full 3-month program covers most files.",
   },
   {
     q: "What if you can’t remove anything?",
@@ -30,48 +29,40 @@ const ITEMS = [
 ];
 
 export function FAQ() {
-  const img = useMediaSrc("homeFaq");
   return (
-    <section id="faq" className="bg-[var(--color-paper)]">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-28">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {img && (
-            <div className="lg:col-span-4 lg:sticky lg:top-28">
-              <div className="aspect-[3/4] overflow-hidden rounded-md border border-[var(--color-stone-200)]">
-                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
-              </div>
-            </div>
-          )}
-          <div className={img ? "lg:col-span-8" : "lg:col-span-12 max-w-4xl mx-auto"}>
-            <div className="eyebrow mb-4">Questions, answered plainly</div>
-            <h2 className="font-serif text-[var(--color-ink)] mb-12">Frequently Asked Questions</h2>
-            <div className="border-t border-[var(--color-stone-300)]">
-              {ITEMS.map((it, i) => <Row key={i} {...it} />)}
-            </div>
-          </div>
+    <section id="faq" className="bg-white">
+      <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 md:py-20">
+        <div className="text-center mb-12">
+          <h2 className="text-[var(--color-ink)]">Frequently Asked Questions</h2>
+          <p className="mt-4 text-lg text-[var(--color-stone-600)]">
+            Everything you need to know about our credit repair service.
+          </p>
+        </div>
+        <div className="border-t border-[var(--color-stone-200)]">
+          {ITEMS.map((it, i) => <Row key={i} {...it} />)}
         </div>
       </div>
     </section>
   );
 }
 
-function Row({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+function Row({ q, a, defaultOpen = false }: { q: string; a: string; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-[var(--color-stone-300)]">
+    <div className="border-b border-[var(--color-stone-200)]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between gap-6 py-6 text-left"
+        className="w-full flex items-center justify-between gap-6 py-5 text-left"
         aria-expanded={open}
       >
-        <span className="font-serif text-lg md:text-xl text-[var(--color-ink)]">{q}</span>
-        <span className="shrink-0 text-[var(--color-stone-600)]">
-          {open ? <Minus size={18} /> : <Plus size={18} />}
+        <span className="text-base md:text-lg font-semibold text-[var(--color-ink)]">{q}</span>
+        <span className="shrink-0 w-8 h-8 rounded-full bg-[var(--color-paper-soft)] flex items-center justify-center text-[var(--color-stone-600)]">
+          {open ? <Minus size={16} /> : <Plus size={16} />}
         </span>
       </button>
       {open && (
-        <div className="pb-6 pr-10 text-[var(--color-stone-700)] leading-relaxed">{a}</div>
+        <div className="pb-5 pr-12 text-[var(--color-stone-600)] leading-relaxed">{a}</div>
       )}
     </div>
   );

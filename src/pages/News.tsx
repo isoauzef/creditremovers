@@ -42,7 +42,7 @@ export default function News() {
         )}
         <div className="relative max-w-7xl mx-auto px-6 md:px-10 pt-16 md:pt-24 pb-16">
           <div className="eyebrow mb-4">Newsroom</div>
-          <h1 className="font-serif text-[var(--color-ink)] max-w-3xl">
+          <h1 className="text-[var(--color-ink)] max-w-3xl">
             Briefings, case notes & quiet observations.
           </h1>
           <p className="mt-6 max-w-2xl text-[var(--color-stone-700)] leading-relaxed">
@@ -52,7 +52,7 @@ export default function News() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 md:px-10 py-16 md:py-24">
+      <section className="max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-20">
         {loading ? (
           <div className="text-[var(--color-stone-600)]">Loading…</div>
         ) : articles.length === 0 ? (
@@ -82,7 +82,7 @@ export default function News() {
                   <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-3">
                     {new Date(a.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                   </div>
-                  <h2 className="font-serif text-xl md:text-2xl text-[var(--color-ink)] mb-3">{a.title}</h2>
+                  <h2 className="text-xl md:text-2xl text-[var(--color-ink)] mb-3">{a.title}</h2>
                   {a.excerpt && (
                     <p className="text-sm text-[var(--color-stone-700)] leading-relaxed mb-6 line-clamp-3">{a.excerpt}</p>
                   )}

@@ -37,9 +37,9 @@ async function loadStripeSettings() {
     stripe_live_secret_key: process.env.STRIPE_LIVE_SECRET_KEY || "",
     stripe_live_webhook_secret: process.env.STRIPE_LIVE_WEBHOOK_SECRET || "",
     stripe_monthly_amount_cents: process.env.STRIPE_MONTHLY_AMOUNT_CENTS || "40000",
-    stripe_monthly_months: process.env.STRIPE_MONTHLY_MONTHS || "6",
-    stripe_upfront_amount_cents: process.env.STRIPE_UPFRONT_AMOUNT_CENTS || "200000",
-    stripe_upfront_savings_label: process.env.STRIPE_UPFRONT_SAVINGS_LABEL || "Save $400",
+    stripe_monthly_months: process.env.STRIPE_MONTHLY_MONTHS || "3",
+    stripe_upfront_amount_cents: process.env.STRIPE_UPFRONT_AMOUNT_CENTS || "100000",
+    stripe_upfront_savings_label: process.env.STRIPE_UPFRONT_SAVINGS_LABEL || "Save $200",
     stripe_monthly_price_id: process.env.STRIPE_MONTHLY_PRICE_ID || "",
   });
 }

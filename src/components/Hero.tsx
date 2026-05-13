@@ -1,57 +1,62 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, ArrowRight } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import { useMediaSrc } from "../hooks/useMedia";
+
+const TRUST = [
+  "98% Success Rate",
+  "3-Bureau Coverage",
+  "No Win, No Fee",
+  "Results in 30 Days",
+];
 
 export function Hero() {
   const heroImg = useMediaSrc("homeHero");
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-paper)] to-[var(--color-stone-50)]" aria-hidden />
-      <div className="relative max-w-7xl mx-auto px-6 md:px-10 pt-8 md:pt-28 pb-10 md:pb-32">
+    <section className="bg-white">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 pt-12 md:pt-20 pb-12 md:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 max-w-3xl">
-          <div className="eyebrow mb-6 inline-flex items-center gap-3">
-            <span className="hairline-gold w-10" aria-hidden />
-            Federally protected credit repair
-          </div>
+          <div className="lg:col-span-7">
+            <h1 className="text-[var(--color-ink)] tracking-tight font-bold text-[40px] leading-[46px] md:text-[52px] md:leading-[58px]">
+              Take Control of<br />
+              <span className="text-[var(--color-accent)]">Your Credit Legally</span>
+            </h1>
 
-          <h1 className="font-serif text-[var(--color-ink)] tracking-tight text-[clamp(3rem,6vw,5rem)] leading-[1.04]">
-            Take control of your credit legally</h1>
+            <p className="mt-6 text-lg md:text-xl text-[var(--color-stone-600)] max-w-2xl leading-relaxed">
+              We permanently remove negative items from your Equifax, Experian and TransUnion
+              reports — using federal consumer protections and incentives to boost your credit score.
+            </p>
 
-          <p className="mt-8 text-lg md:text-xl text-[var(--color-stone-700)] max-w-2xl leading-relaxed">
-            We permanently remove negative items from your Equifax, Experian and TransUnion reports - using federal consumer protections & incentives to boost your credit score.     
-          </p>
+            <div className="mt-8 flex flex-row flex-nowrap gap-2 md:gap-3">
+              <Link to="/checkout" className="btn-primary whitespace-nowrap">
+                Get Started
+              </Link>
+              <a href="#lead-form" className="btn-secondary whitespace-nowrap">
+                Free Consultation
+              </a>
+            </div>
 
-          <div className="mt-12 flex flex-wrap gap-4">
-            <a
-              href="#lead-form"
-              className="inline-flex items-center gap-3 px-6 py-3.5 rounded-md bg-[var(--color-ink)] text-[var(--color-paper)] btn-press text-sm tracking-wide"
-            >
-              Free Consultation
-              <ArrowRight size={16} />
-            </a>
-            <Link
-              to="/checkout"
-              className="inline-flex items-center gap-3 px-6 py-3.5 rounded-md border border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-paper)] btn-press text-sm tracking-wide transition-colors"
-            >
-              Become a Client
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+            <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-3 max-w-xl">
+              {TRUST.map((t) => (
+                <li key={t} className="flex items-center gap-2 text-sm text-[var(--color-stone-700)]">
+                  <Check size={16} className="text-[var(--color-accent)] shrink-0" />
+                  {t}
+                </li>
+              ))}
+            </ul>
 
-          <div className="mt-10 flex items-center gap-3 text-sm text-[var(--color-stone-600)]">
-            <ShieldCheck size={18} className="text-[var(--color-accent)]" />
-            Bank-grade encryption · KMS-protected uploads · No hidden fees
-          </div>
+            <div className="mt-6 flex items-center gap-2 text-xs text-[var(--color-stone-500)]">
+              <ShieldCheck size={14} className="text-[var(--color-accent)]" />
+              Bank-grade encryption · KMS-protected uploads
+            </div>
           </div>
 
           {heroImg && (
             <div className="lg:col-span-5">
-              <div className="aspect-[4/5] overflow-hidden rounded-md bg-[var(--color-paper)]">
+              <div className="aspect-[4/5] overflow-hidden rounded-2xl">
                 <img
                   src={heroImg}
                   alt=""
-                  className="w-full h-full object-cover hero-feather"
+                  className="w-full h-full object-cover"
                   loading="eager"
                   decoding="async"
                 />

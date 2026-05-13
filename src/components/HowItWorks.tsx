@@ -1,47 +1,41 @@
-const STEPS = [
+import { ShieldCheck, Award, Zap } from "lucide-react";
+
+const CARDS = [
   {
-    n: "01",
-    title: "Free file review",
-    body: "Submit a brief inquiry. A senior analyst evaluates your three-bureau profile and outlines a candid, no-obligation strategy within one business day.",
+    icon: ShieldCheck,
+    title: "100% FCRA Compliant",
+    body: "We use only legal, federally protected dispute methods. No shortcuts, no black-hat tactics — ever.",
   },
   {
-    n: "02",
-    title: "Secure intake",
-    body: "Become a client through our encrypted onboarding. SSN handled with AWS KMS. Documents stored in SSE-KMS — never on the public internet.",
+    icon: Award,
+    title: "Permanent Removal",
+    body: "Once removed, negative items are gone for good. We work all three bureaus until your file is clean.",
   },
   {
-    n: "03",
-    title: "Disciplined disputes",
-    body: "We file precise, by-the-letter challenges to inaccurate, outdated and unverifiable items. Bureaus respond within 30 days; we adapt round-by-round.",
-  },
-  {
-    n: "04",
-    title: "Reported progress",
-    body: "Every round, we publish your bureau scores, deletions and remaining items to your private dashboard. Quiet, measurable forward motion.",
+    icon: Zap,
+    title: "Fast Results",
+    body: "Bureaus must respond within 30 days. Most clients see their first round of updates in 30–45 days.",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-[var(--color-paper)]">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-28">
-        <div className="max-w-2xl mb-16">
-          <div className="eyebrow mb-4">The process</div>
-          <h2 className="font-serif text-[var(--color-ink)]">A method, not a marketing funnel.</h2>
-          <p className="mt-5 text-[var(--color-stone-700)] leading-relaxed">
-            Credit repair, done correctly, is a craft of patience and precision. Here is the
-            same sequence we’ve refined across thousands of files.
+    <section id="why" className="bg-white">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 pt-0 pb-12 md:py-20">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-[var(--color-ink)]">Why Choose Credit Removers?</h2>
+          <p className="mt-4 text-lg text-[var(--color-stone-600)]">
+            We're the trusted leader in credit repair with a proven track record.
           </p>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[var(--color-stone-200)] border border-[var(--color-stone-200)]">
-          {STEPS.map((s) => (
-            <div key={s.n} className="bg-[var(--color-paper)] p-5 md:p-12">
-              <div className="font-serif text-[var(--color-gold)] text-3xl mb-6">{s.n}</div>
-              <h3 className="font-serif text-xl md:text-2xl text-[var(--color-ink)] mb-4">
-                {s.title}
-              </h3>
-              <p className="text-sm text-[var(--color-stone-700)] leading-relaxed">{s.body}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {CARDS.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="card-soft p-8 text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-[var(--color-paper-soft)] flex items-center justify-center mb-5">
+                <Icon size={26} className="text-[var(--color-accent)]" />
+              </div>
+              <h3 className="text-[var(--color-ink)] mb-3">{title}</h3>
+              <p className="text-[var(--color-stone-600)] leading-relaxed">{body}</p>
             </div>
           ))}
         </div>

@@ -9,6 +9,7 @@ interface User {
   firstName: string;
   lastName: string;
   createdAt: string;
+  mustChangePassword?: boolean;
 }
 
 interface Submission {
@@ -146,7 +147,7 @@ function LoginForm({ onSuccess }: { onSuccess: () => void }) {
         </div>
       )}
       <div className="eyebrow mb-3">Client Portal</div>
-      <h1 className="font-serif text-3xl mb-8 text-[var(--color-ink)]">
+      <h1 className="text-3xl font-bold mb-8 text-[var(--color-ink)]">
         {mode === "login" ? "Sign in to your dashboard" : "Reset your password"}
       </h1>
 
@@ -212,6 +213,7 @@ function Dashboard({ data }: { data: DashboardData }) {
   const [activeRoundId, setActiveRoundId] = useState<number | null>(rounds[0]?.id ?? null);
   const round = rounds.find((r) => r.id === activeRoundId) || rounds[0] || null;
   const emptyArt = useMediaSrc("accountEmpty");
+  const [forceChange, setForceChange] = useState(!!user.mustChangePassword);
 
   async function handleLogout() {
     await fetch("/api/customer/logout", { method: "POST", credentials: "include" });
@@ -220,10 +222,11 @@ function Dashboard({ data }: { data: DashboardData }) {
 
   return (
     <div>
+      {forceChange && <ForceChangePasswordModal onDone={() => setForceChange(false)} />}
       <header className="flex flex-wrap items-end justify-between gap-6 mb-12 pb-6 border-b border-[var(--color-stone-200)]">
         <div>
-          <div className="eyebrow mb-2">Client Dashboard</div>
-          <h1 className="font-serif text-3xl md:text-4xl text-[var(--color-ink)]">
+          <div className="text-xs uppercase tracking-wider text-[var(--color-stone-500)] mb-2">Client Dashboard</div>
+          <h1 className="text-3xl md:text-4xl text-[var(--color-ink)]">
             Welcome back, {user.firstName || user.email.split("@")[0]}
           </h1>
         </div>
@@ -235,12 +238,18 @@ function Dashboard({ data }: { data: DashboardData }) {
         </div>
       </header>
 
+      <UploadDocuments />
+
+      <OverviewKPIs round={round} />
+
+      <DisputeList />
+
       {rounds.length === 0 ? (
         <div className="bg-[var(--color-stone-50)] border border-[var(--color-stone-200)] p-10 text-center">
           {emptyArt && (
             <img src={emptyArt} alt="" className="mx-auto mb-8 w-40 h-40 object-cover rounded-md" loading="lazy" decoding="async" />
           )}
-          <h2 className="font-serif text-2xl mb-3">Your first round is in motion.</h2>
+          <h2 className="text-2xl mb-3">Your first round is in motion.</h2>
           <p className="text-[var(--color-stone-700)] max-w-xl mx-auto">
             Disputes have been filed. The bureaus have 30 days to respond. Your senior analyst will publish your first
             round summary here as soon as the responses are received.
@@ -290,9 +299,9 @@ function PlanBadge({ submission }: { submission: Submission }) {
       ? "Paid in Full"
       : status === "completed"
       ? "Program Completed"
-      : `Month ${submission.monthsBilled} of 6`;
+      : `Month ${submission.monthsBilled} of 3`;
   return (
-    <span className="text-xs uppercase tracking-[0.18em] px-3 py-1.5 border border-[var(--color-gold)] text-[var(--color-stone-800)] rounded-sm">
+    <span className="text-xs uppercase tracking-[0.18em] px-3 py-1.5 border border-[var(--color-accent)] text-[var(--color-accent)] rounded-full font-semibold">
       {label}
     </span>
   );
@@ -311,7 +320,7 @@ function CreditScoreSummary({ round }: { round: Round }) {
       <div className="flex items-end justify-between mb-6">
         <div>
           <div className="eyebrow mb-2">Credit Score Summary</div>
-          <h2 className="font-serif text-2xl text-[var(--color-ink)]">Round {round.roundNumber}</h2>
+          <h2 className="text-2xl text-[var(--color-ink)]">Round {round.roundNumber}</h2>
         </div>
         <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] text-right">
           As of {new Date(round.summaryDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
@@ -326,10 +335,10 @@ function CreditScoreSummary({ round }: { round: Round }) {
           return (
             <div key={b.key} className="bg-[var(--color-paper)] p-8">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs uppercase tracking-[0.2em] text-[var(--color-gold)]">{b.label}</span>
-                <span className="text-xs text-[var(--color-stone-600)]">{b.abbr}</span>
+                <span className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold">{b.label}</span>
+                <span className="text-xs text-[var(--color-stone-500)]">{b.abbr}</span>
               </div>
-              <div className="font-serif text-6xl text-[var(--color-ink)] tabular-nums leading-none">
+              <div className="text-6xl font-bold text-[var(--color-ink)] tabular-nums leading-none">
                 {score ?? "—"}
               </div>
               <ScoreArc score={score} />
@@ -380,11 +389,44 @@ const CATEGORIES: { key: string; label: string }[] = [
   { key: "newItemsAdded",        label: "New Items Added" },
 ];
 
+// === Overview KPIs ==============================================
+function OverviewKPIs({ round }: { round: Round | null }) {
+  const totalNegatives = round
+    ? (round.disputesDeletedGrandTotal || 0)
+      + (round.ongoingDisputesGrandTotal || 0)
+      + (round.undisputedNegativeGrandTotal || 0)
+    : 0;
+  const pending = round?.ongoingDisputesThisRound ?? 0;
+  const completed = round?.disputesDeletedGrandTotal ?? 0;
+  const scores = round
+    ? [round.equifaxScore, round.experianScore, round.transunionScore].filter((s): s is number => typeof s === "number")
+    : [];
+  const avgScore = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+  const cards = [
+    { label: "Total Negatives", value: totalNegatives },
+    { label: "Pending", value: pending },
+    { label: "Completed", value: completed },
+    { label: "Avg Score", value: avgScore ?? "—" },
+  ];
+
+  return (
+    <section className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+      {cards.map((c) => (
+        <div key={c.label} className="card-soft p-5">
+          <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">{c.label}</div>
+          <div className="text-3xl font-bold text-[var(--color-ink)] tabular-nums">{c.value}</div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function ChangesSinceLastReport({ round }: { round: Round }) {
   return (
     <section>
       <div className="eyebrow mb-2">Changes Since Last Report</div>
-      <h2 className="font-serif text-2xl text-[var(--color-ink)] mb-6">Round-over-round movement</h2>
+      <h2 className="text-2xl font-bold text-[var(--color-ink)] mb-6">Round-over-round movement</h2>
 
       <div className="overflow-x-auto border border-[var(--color-stone-200)]">
         <table className="w-full text-sm">
@@ -403,7 +445,7 @@ function ChangesSinceLastReport({ round }: { round: Round }) {
               const total = (round as any)[`${c.key}GrandTotal`] as number;
               return (
                 <tr key={c.key} className="border-b border-[var(--color-stone-200)] last:border-0">
-                  <td className="py-5 px-5 font-serif text-base text-[var(--color-ink)]">{c.label}</td>
+                  <td className="py-5 px-5 text-base font-medium text-[var(--color-ink)]">{c.label}</td>
                   <td className="py-5 px-5 text-right tabular-nums text-[var(--color-stone-800)]">{thisR}</td>
                   <td className="py-5 px-5 text-right tabular-nums text-[var(--color-stone-600)]">{lastR}</td>
                   <td className="py-5 px-5 text-right tabular-nums text-[var(--color-ink)] font-medium">{total}</td>
@@ -413,6 +455,221 @@ function ChangesSinceLastReport({ round }: { round: Round }) {
           </tbody>
         </table>
       </div>
+    </section>
+  );
+}
+
+// === Upload Documents ===========================================
+function UploadDocuments() {
+  return (
+    <section className="mb-12 card-soft p-6 md:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+        <div>
+          <div className="text-xs uppercase tracking-wider text-[var(--color-accent)] font-semibold mb-1">Documents</div>
+          <h2 className="text-xl text-[var(--color-ink)]">Upload Your ID &amp; Proof Of Address</h2>
+          <p className="text-sm text-[var(--color-stone-600)] mt-1">Snap with your phone camera or upload from your device.</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DocSlot label="Government-Issued ID" hint="Driver's license, state ID, or passport" prefix="id" />
+        <DocSlot label="Proof Of Address" hint="Utility, phone, rent or insurance bill within 60 days" prefix="bill" />
+      </div>
+    </section>
+  );
+}
+
+function DocSlot({ label, hint, prefix }: { label: string; hint: string; prefix: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [status, setStatus] = useState<"idle" | "uploading" | "done" | "error">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleUpload(selected: File | null) {
+    if (!selected) return;
+    setFile(selected);
+    setStatus("uploading");
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("docType", prefix);
+      fd.append("file", selected);
+      const r = await fetch("/api/customer/upload-document", { method: "POST", credentials: "include", body: fd });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.message || "Upload failed");
+      }
+      setStatus("done");
+    } catch (err) {
+      setError((err as Error).message);
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="border-2 border-dashed border-[var(--color-stone-300)] hover:border-[var(--color-accent)] transition-colors rounded-lg p-5">
+      <div className="mb-3">
+        <div className="text-sm font-semibold text-[var(--color-ink)]">{label}</div>
+        <div className="text-xs text-[var(--color-stone-500)] mt-0.5">{hint}</div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="relative inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-[var(--color-paper-soft)] border border-[var(--color-stone-300)] text-sm text-[var(--color-ink)] cursor-pointer hover:bg-white">
+          <input type="file" accept="image/*,.pdf" onChange={(e) => handleUpload(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
+          Choose File
+        </label>
+        <label className="relative inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-[var(--color-accent)] text-white text-sm font-semibold cursor-pointer hover:bg-[var(--color-accent-hover)]">
+          <input type="file" accept="image/*" capture="environment" onChange={(e) => handleUpload(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer" />
+          Use Phone Camera
+        </label>
+      </div>
+      {file && (
+        <div className="mt-3 text-xs">
+          <span className="text-[var(--color-stone-600)]">{file.name}</span>
+          {status === "uploading" && <span className="ml-2 text-[var(--color-stone-500)]">Uploading�</span>}
+          {status === "done" && <span className="ml-2 text-[var(--color-accent)] font-semibold">? Uploaded</span>}
+          {status === "error" && <span className="ml-2 text-red-600">{error}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+// === Force Change Password Modal ================================
+function ForceChangePasswordModal({ onDone }: { onDone: () => void }) {
+  const [pw1, setPw1] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (pw1.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (pw1 !== pw2) { setError("Passwords do not match."); return; }
+    setSubmitting(true);
+    try {
+      const r = await fetch("/api/customer/change-password", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword: pw1 }),
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.message || "Could not update password.");
+      }
+      onDone();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-8">
+        <div className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold mb-2">
+          Secure Your Account
+        </div>
+        <h2 className="text-2xl font-bold text-[var(--color-ink)] mb-2">Choose a new password</h2>
+        <p className="text-sm text-[var(--color-stone-700)] mb-6">
+          Your account was created with your phone number as a temporary password.
+          Please set a new password to continue.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <label className="block">
+            <span className="block text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">New password</span>
+            <input
+              type="password"
+              value={pw1}
+              onChange={(e) => setPw1(e.target.value)}
+              required
+              minLength={8}
+              className="w-full border border-[var(--color-stone-300)] rounded-md focus:border-[var(--color-accent)] outline-none px-4 py-3 text-base"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">Confirm password</span>
+            <input
+              type="password"
+              value={pw2}
+              onChange={(e) => setPw2(e.target.value)}
+              required
+              minLength={8}
+              className="w-full border border-[var(--color-stone-300)] rounded-md focus:border-[var(--color-accent)] outline-none px-4 py-3 text-base"
+            />
+          </label>
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <button type="submit" disabled={submitting} className="btn-primary w-full disabled:opacity-60">
+            {submitting ? "Saving…" : "Save new password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+// === Dispute List ===============================================
+interface DisputeRow {
+  id: string | number;
+  bureau: string;
+  account: string;
+  status: string;
+  openedAt: string;
+}
+
+function DisputeList() {
+  const [disputes, setDisputes] = useState<DisputeRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/customer/disputes", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setDisputes(d.disputes || []))
+      .catch(() => setError("Could not load disputes"));
+  }, []);
+
+  return (
+    <section className="mb-12 card-soft p-6 md:p-8">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <div className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold mb-1">Active Disputes</div>
+          <h2 className="text-xl font-bold text-[var(--color-ink)]">Tradeline activity</h2>
+        </div>
+        <span className="text-xs text-[var(--color-stone-500)]">Synced via DisputeFox</span>
+      </div>
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {!disputes ? (
+        <p className="text-sm text-[var(--color-stone-600)]">Loading disputes�</p>
+      ) : disputes.length === 0 ? (
+        <p className="text-sm text-[var(--color-stone-600)]">
+          No active disputes yet. Upload your latest credit report above and DisputeFox will pull tradelines automatically.
+        </p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] border-b border-[var(--color-stone-200)]">
+                <th className="py-3 pr-4">Bureau</th>
+                <th className="py-3 pr-4">Account</th>
+                <th className="py-3 pr-4">Status</th>
+                <th className="py-3">Opened</th>
+              </tr>
+            </thead>
+            <tbody>
+              {disputes.map((d) => (
+                <tr key={d.id} className="border-b border-[var(--color-stone-100)] last:border-0">
+                  <td className="py-3 pr-4 font-medium text-[var(--color-ink)]">{d.bureau}</td>
+                  <td className="py-3 pr-4 text-[var(--color-stone-800)]">{d.account}</td>
+                  <td className="py-3 pr-4">
+                    <span className="text-xs uppercase tracking-[0.16em] font-semibold text-[var(--color-accent)]">{d.status}</span>
+                  </td>
+                  <td className="py-3 text-[var(--color-stone-600)] tabular-nums">{new Date(d.openedAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

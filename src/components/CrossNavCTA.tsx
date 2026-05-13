@@ -38,7 +38,7 @@ export function CrossNavCTA() {
             >
               <div>
                 <div className="eyebrow mb-5">{c.eyebrow}</div>
-                <h3 className="font-serif text-2xl md:text-[1.6rem] text-[var(--color-ink)] mb-4">
+                <h3 className="text-2xl md:text-[1.6rem] text-[var(--color-ink)] mb-4">
                   {c.title}
                 </h3>
                 <p className="text-sm text-[var(--color-stone-700)] leading-relaxed">{c.body}</p>

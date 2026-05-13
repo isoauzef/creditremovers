@@ -44,7 +44,7 @@ function Item({ icon, title, body }: { icon: React.ReactNode; title: string; bod
         {icon}
         <span className="text-xs uppercase tracking-[0.2em] text-[var(--color-gold)]">Security</span>
       </div>
-      <h3 className="font-serif text-xl mb-3">{title}</h3>
+      <h3 className="text-xl mb-3">{title}</h3>
       <p className="text-sm leading-relaxed text-[var(--color-stone-300)]">{body}</p>
     </div>
   );

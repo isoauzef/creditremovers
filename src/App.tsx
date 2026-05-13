@@ -2,11 +2,13 @@ import { Navigation } from "./components/Navigation";
 import { Hero } from "./components/Hero";
 import { Statistics } from "./components/Statistics";
 import { WhatWeRemove } from "./components/WhatWeRemove";
-import { CreditAccessAct } from "./components/CreditAccessAct";
 import { HowItWorks } from "./components/HowItWorks";
+import { BrandReputation } from "./components/BrandReputation";
+import { FeaturedIn } from "./components/FeaturedIn";
+import { Testimonials } from "./components/Testimonials";
+import { CaseStudies } from "./components/CaseStudies";
 import { LeadForm } from "./components/LeadForm";
 import { FAQ } from "./components/FAQ";
-import { CrossNavCTA } from "./components/CrossNavCTA";
 import { Footer } from "./components/Footer";
 
 export default function App() {
@@ -16,11 +18,13 @@ export default function App() {
       <Hero />
       <Statistics />
       <WhatWeRemove />
-      <CreditAccessAct />
       <HowItWorks />
-      <LeadForm />
+      <BrandReputation />
+      <FeaturedIn />
+      <Testimonials />
+      <CaseStudies />
       <FAQ />
-      <CrossNavCTA />
+      <LeadForm />
       <Footer />
     </div>
   );

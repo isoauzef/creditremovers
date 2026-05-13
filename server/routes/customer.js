@@ -5,7 +5,11 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 const prisma = require("../db");
+const secureStorage = require("../services/secureStorage");
+const disputefox = require("../services/disputefox");
 
 const router = express.Router();
 
@@ -40,7 +44,7 @@ function requireCustomer(req, res, next) {
 
 // ── Sign up (called from /checkout success popup) ───────────────
 router.post("/signup", async (req, res) => {
-  const { email, password, firstName, lastName, checkoutSubmissionId } = req.body || {};
+  const { email, password, firstName, lastName, checkoutSubmissionId, mustChangePassword } = req.body || {};
   if (!email || !password || password.length < 8) {
     return res.status(400).json({ message: "Email and password (8+ chars) required." });
   }
@@ -56,6 +60,7 @@ router.post("/signup", async (req, res) => {
         passwordHash,
         firstName: firstName || "",
         lastName: lastName || "",
+        mustChangePassword: !!mustChangePassword,
       },
     });
 
@@ -104,7 +109,7 @@ router.post("/logout", (_req, res) => {
 router.get("/me", requireCustomer, async (req, res) => {
   const user = await prisma.customerUser.findUnique({
     where: { id: req.customer.id },
-    select: { id: true, email: true, firstName: true, lastName: true, createdAt: true },
+    select: { id: true, email: true, firstName: true, lastName: true, createdAt: true, mustChangePassword: true },
   });
   return res.json(user);
 });
@@ -114,7 +119,7 @@ router.get("/dashboard", requireCustomer, async (req, res) => {
   try {
     const user = await prisma.customerUser.findUnique({
       where: { id: req.customer.id },
-      select: { id: true, email: true, firstName: true, lastName: true, createdAt: true },
+      select: { id: true, email: true, firstName: true, lastName: true, createdAt: true, mustChangePassword: true },
     });
     if (!user) return res.status(404).json({ message: "Account not found" });
 
@@ -184,6 +189,87 @@ router.post("/reset-password", async (req, res) => {
   } catch (err) {
     console.error("[customer] reset-password", err);
     return res.status(500).json({ message: "Reset failed" });
+  }
+});
+
+// ── Change password (for logged-in users; clears mustChangePassword) ──
+router.post("/change-password", requireCustomer, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ message: "New password must be 8+ characters." });
+  }
+  try {
+    const user = await prisma.customerUser.findUnique({ where: { id: req.customer.id } });
+    if (!user) return res.status(404).json({ message: "Not found" });
+    // Allow skipping currentPassword check only when user is forced to change
+    if (!user.mustChangePassword) {
+      if (!currentPassword) return res.status(400).json({ message: "Current password required." });
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) return res.status(401).json({ message: "Current password is incorrect." });
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.customerUser.update({
+      where: { id: user.id },
+      data: { passwordHash, mustChangePassword: false },
+    });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[customer] change-password", err);
+    return res.status(500).json({ message: "Could not change password" });
+  }
+});
+
+// ── Dispute list (DisputeFox-backed; stub for now) ──────────────
+router.get("/disputes", requireCustomer, async (req, res) => {
+  try {
+    const disputes = await disputefox.listDisputes(req.customer.id);
+    return res.json({ disputes });
+  } catch (err) {
+    console.error("[customer] disputes", err);
+    return res.status(500).json({ message: "Failed to load disputes" });
+  }
+});
+
+// ── Upload document from client dashboard (ID / proof of address) ──
+const docUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/\.(pdf|png|jpg|jpeg|webp|heic|heif)$/i.test(path.extname(file.originalname))) cb(null, true);
+    else cb(new Error("Only PDF, PNG, JPG, WEBP, HEIC files accepted."));
+  },
+});
+
+router.post("/upload-document", requireCustomer, docUpload.single("file"), async (req, res) => {
+  const docType = String(req.body?.docType || "");
+  if (!["id", "bill"].includes(docType)) {
+    return res.status(400).json({ message: "Invalid docType" });
+  }
+  if (!req.file) return res.status(400).json({ message: "No file provided" });
+
+  try {
+    const submission = await prisma.checkoutSubmission.findFirst({
+      where: { customerUserId: req.customer.id },
+      orderBy: { createdAt: "desc" },
+    });
+    if (!submission) return res.status(404).json({ message: "No active submission found" });
+
+    const key = await secureStorage.putObject({
+      prefix: docType === "id" ? "id-docs" : "utility-bills",
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      buffer: req.file.buffer,
+    });
+
+    const data = docType === "id"
+      ? { idDocS3Key: key, idDocFilename: req.file.originalname, idDocMimeType: req.file.mimetype }
+      : { billDocS3Key: key, billDocFilename: req.file.originalname, billDocMimeType: req.file.mimetype };
+
+    await prisma.checkoutSubmission.update({ where: { id: submission.id }, data });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("[customer] upload-document", err);
+    return res.status(500).json({ message: "Upload failed" });
   }
 });
 

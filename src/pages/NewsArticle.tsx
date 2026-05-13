@@ -43,7 +43,7 @@ export default function NewsArticle() {
         <div className="max-w-3xl mx-auto px-6 py-32 text-[var(--color-stone-600)]">Loading…</div>
       ) : notFound || !article ? (
         <div className="max-w-3xl mx-auto px-6 py-32 text-center">
-          <h1 className="font-serif text-3xl mb-4">Article not found</h1>
+          <h1 className="text-3xl mb-4">Article not found</h1>
           <Link to="/news" className="text-[var(--color-accent)]">Return to newsroom</Link>
         </div>
       ) : (
@@ -53,7 +53,7 @@ export default function NewsArticle() {
               {new Date(article.publishedAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
               {article.author && <span className="ml-3 text-[var(--color-stone-600)] normal-case tracking-normal">· By {article.author}</span>}
             </div>
-            <h1 className="font-serif text-[var(--color-ink)] mb-8">{article.title}</h1>
+            <h1 className="text-[var(--color-ink)] mb-8">{article.title}</h1>
 
             {(article.coverImageUrl || fallbackCover) && (
               <div className="aspect-[16/9] bg-[var(--color-stone-200)] mb-12 overflow-hidden">
@@ -77,7 +77,7 @@ export default function NewsArticle() {
                 className="bg-[var(--color-paper)] border border-[var(--color-stone-200)] p-8 hover:border-[var(--color-ink)] transition-colors"
               >
                 <div className="eyebrow mb-3">Discuss</div>
-                <h3 className="font-serif text-xl mb-3">Free Consultation</h3>
+                <h3 className="text-xl mb-3">Free Consultation</h3>
                 <p className="text-sm text-[var(--color-stone-700)] mb-5">
                   A senior analyst will review your file within one business day.
                 </p>
@@ -90,7 +90,7 @@ export default function NewsArticle() {
                 className="bg-[var(--color-ink)] text-[var(--color-paper)] p-8 hover:bg-[var(--color-stone-900)] transition-colors"
               >
                 <div className="eyebrow mb-3 text-[var(--color-gold)]">Begin</div>
-                <h3 className="font-serif text-xl mb-3">Sign Up Now</h3>
+                <h3 className="text-xl mb-3">Sign Up Now</h3>
                 <p className="text-sm text-[var(--color-stone-300)] mb-5">
                   Become a client today. Onboarding takes about ten minutes.
                 </p>

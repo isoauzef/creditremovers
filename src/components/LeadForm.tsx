@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "./ui/dialog";
@@ -11,29 +11,53 @@ const STATES = [
   "RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
 ];
 
+type FormState = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  state: string;
+  creditScoreRange: string;
+  negativeItemsCount: string;
+  notes: string;
+};
+
+const INITIAL: FormState = {
+  firstName: "", lastName: "", email: "", phone: "",
+  state: "", creditScoreRange: "", negativeItemsCount: "", notes: "",
+};
+
 export function LeadForm() {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [form, setForm] = useState<FormState>(INITIAL);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const set = (k: keyof FormState) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const progress = useMemo(() => (step === 1 ? 33 : step === 2 ? 66 : 100), [step]);
+
+  const canNext1 = !!(form.firstName && form.lastName && form.email && form.phone);
+  const canNext2 = !!(form.state && form.creditScoreRange && form.negativeItemsCount);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      const data = new FormData(e.currentTarget);
-      const payload = Object.fromEntries(data.entries());
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, source: "homepage" }),
+        body: JSON.stringify({ ...form, source: "homepage" }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.message || "Could not submit. Please try again.");
       }
       setSuccess(true);
-      (e.target as HTMLFormElement).reset();
+      setForm(INITIAL);
+      setStep(1);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -42,65 +66,140 @@ export function LeadForm() {
   }
 
   return (
-    <section id="lead-form" className="bg-[var(--color-paper)] border-t border-[var(--color-stone-200)]">
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-28">
-        <div className="max-w-2xl mb-12">
-          <div className="eyebrow mb-4">Free Consultation</div>
-          <h2 className="font-serif text-[var(--color-ink)]">
-            Tell us what’s on your report.
+    <section id="lead-form" className="bg-[var(--color-paper-soft)] border-t border-[var(--color-stone-200)]">
+      <div className="max-w-3xl mx-auto px-6 md:px-10 py-12 md:py-20">
+        <div className="text-center mb-10">
+          <div className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold mb-3">
+            Free Consultation
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-ink)]">
+            Tell us what's on your report
           </h2>
-          <p className="mt-5 text-[var(--color-stone-700)] leading-relaxed">
-            A senior file analyst will review your situation within one business day and
-            outline a candid path forward — at no cost or obligation.
+          <p className="mt-4 text-[var(--color-stone-700)] max-w-xl mx-auto">
+            A senior file analyst will review your situation within one business day —
+            at no cost or obligation.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
-          <Field label="First name" name="firstName" required autoComplete="given-name" />
-          <Field label="Last name" name="lastName" required autoComplete="family-name" />
-          <Field label="Email" name="email" type="email" required autoComplete="email" />
-          <Field label="Phone" name="phone" type="tel" required autoComplete="tel" />
+        <div className="card-soft p-6 md:p-10">
+          <div className="mb-8">
+            <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">
+              <span>Step {step} of 3</span>
+              <span>{progress}%</span>
+            </div>
+            <div className="h-1.5 bg-[var(--color-stone-200)] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[var(--color-accent)] transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
 
-          <SelectField label="State" name="state">
-            <option value="">Select…</option>
-            {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </SelectField>
-
-          <SelectField label="Estimated credit score" name="creditScoreRange">
-            <option value="">Select…</option>
-            {SCORE_RANGES.map((s) => <option key={s} value={s}>{s}</option>)}
-          </SelectField>
-
-          <SelectField label="Negative items on report" name="negativeItemsCount">
-            <option value="">Select…</option>
-            {NEG_ITEMS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </SelectField>
-
-          <Field label="What would you like us to know?" name="notes" />
-
-          <div className="md:col-span-2 pt-2">
-            {error && (
-              <p className="mb-4 text-sm text-[#9b2c2c]" role="alert">{error}</p>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {step === 1 && (
+              <>
+                <h3 className="text-lg font-semibold text-[var(--color-ink)]">Your details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Field label="First name" value={form.firstName} onChange={set("firstName")} autoComplete="given-name" required />
+                  <Field label="Last name" value={form.lastName} onChange={set("lastName")} autoComplete="family-name" required />
+                  <Field label="Email" type="email" value={form.email} onChange={set("email")} autoComplete="email" required />
+                  <Field label="Phone" type="tel" value={form.phone} onChange={set("phone")} autoComplete="tel" required />
+                </div>
+              </>
             )}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full md:w-auto px-8 py-3.5 rounded-md bg-[var(--color-ink)] text-[var(--color-paper)] btn-press text-sm tracking-wide disabled:opacity-60"
-            >
-              {submitting ? "Submitting…" : "Request Consultation"}
-            </button>
-            <p className="mt-4 text-xs text-[var(--color-stone-600)] max-w-xl">
+
+            {step === 2 && (
+              <>
+                <h3 className="text-lg font-semibold text-[var(--color-ink)]">Quick context</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <SelectField label="State" value={form.state} onChange={set("state")}>
+                    <option value="">Select…</option>
+                    {STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </SelectField>
+                  <SelectField label="Estimated credit score" value={form.creditScoreRange} onChange={set("creditScoreRange")}>
+                    <option value="">Select…</option>
+                    {SCORE_RANGES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </SelectField>
+                  <div className="md:col-span-2">
+                    <SelectField label="Negative items on report" value={form.negativeItemsCount} onChange={set("negativeItemsCount")}>
+                      <option value="">Select…</option>
+                      {NEG_ITEMS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </SelectField>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <h3 className="text-lg font-semibold text-[var(--color-ink)]">Anything else?</h3>
+                <label className="block">
+                  <span className="block text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">
+                    What would you like us to know? <span className="opacity-60">(optional)</span>
+                  </span>
+                  <textarea
+                    value={form.notes}
+                    onChange={(e) => set("notes")(e.target.value)}
+                    rows={4}
+                    className="w-full border border-[var(--color-stone-300)] rounded-md focus:border-[var(--color-accent)] outline-none px-4 py-3 text-base bg-white"
+                  />
+                </label>
+
+                <div className="rounded-md bg-[var(--color-paper-soft)] border border-[var(--color-stone-200)] p-4 text-sm text-[var(--color-stone-700)]">
+                  <div className="font-semibold text-[var(--color-ink)] mb-1">Quick recap</div>
+                  <div>{form.firstName} {form.lastName} · {form.email} · {form.phone}</div>
+                  <div className="mt-1 text-[var(--color-stone-600)]">
+                    {form.state} · Score {form.creditScoreRange} · {form.negativeItemsCount} negative items
+                  </div>
+                </div>
+              </>
+            )}
+
+            {error && <p className="text-sm text-[#9b2c2c]" role="alert">{error}</p>}
+
+            <div className="flex items-center justify-between pt-2">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => (s - 1) as 1 | 2 | 3)}
+                  className="text-sm text-[var(--color-stone-700)] hover:text-[var(--color-ink)] underline"
+                >
+                  ← Back
+                </button>
+              ) : <span />}
+
+              {step < 3 ? (
+                <button
+                  type="button"
+                  disabled={(step === 1 && !canNext1) || (step === 2 && !canNext2)}
+                  onClick={() => setStep((s) => (s + 1) as 1 | 2 | 3)}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn-primary disabled:opacity-60"
+                >
+                  {submitting ? "Submitting…" : "Request Consultation"}
+                </button>
+              )}
+            </div>
+
+            <p className="text-xs text-[var(--color-stone-600)]">
               By submitting, you agree to be contacted by Credit Removers regarding your inquiry.
               We never sell your information.
             </p>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
 
       <Dialog open={success} onOpenChange={setSuccess}>
         <DialogContent className="bg-[var(--color-paper)] border-[var(--color-stone-200)]">
           <DialogHeader>
-            <DialogTitle className="font-serif">Thank you.</DialogTitle>
+            <DialogTitle>Thank you.</DialogTitle>
             <DialogDescription className="text-[var(--color-stone-700)] pt-2">
               A senior analyst will review your file and reach out within one business day.
               Look out for an email from <strong>hello@creditremovers.com</strong>.
@@ -113,8 +212,11 @@ export function LeadForm() {
 }
 
 function Field({
-  label, name, type = "text", required, autoComplete,
-}: { label: string; name: string; type?: string; required?: boolean; autoComplete?: string }) {
+  label, type = "text", value, onChange, required, autoComplete,
+}: {
+  label: string; type?: string; value: string;
+  onChange: (v: string) => void; required?: boolean; autoComplete?: string;
+}) {
   return (
     <label className="block">
       <span className="block text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">
@@ -122,26 +224,31 @@ function Field({
       </span>
       <input
         type={type}
-        name={name}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         required={required}
         autoComplete={autoComplete}
-        className="w-full bg-transparent border-0 border-b border-[var(--color-stone-300)] focus:border-[var(--color-ink)] outline-none px-0 py-2 text-base"
+        className="w-full border border-[var(--color-stone-300)] rounded-md focus:border-[var(--color-accent)] outline-none px-4 py-3 text-base bg-white"
       />
     </label>
   );
 }
 
 function SelectField({
-  label, name, children,
-}: { label: string; name: string; children: React.ReactNode }) {
+  label, value, onChange, children,
+}: {
+  label: string; value: string;
+  onChange: (v: string) => void; children: React.ReactNode;
+}) {
   return (
     <label className="block">
       <span className="block text-xs uppercase tracking-[0.18em] text-[var(--color-stone-600)] mb-2">
         {label}
       </span>
       <select
-        name={name}
-        className="w-full bg-transparent border-0 border-b border-[var(--color-stone-300)] focus:border-[var(--color-ink)] outline-none px-0 py-2 text-base"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border border-[var(--color-stone-300)] rounded-md focus:border-[var(--color-accent)] outline-none px-4 py-3 text-base bg-white"
       >
         {children}
       </select>

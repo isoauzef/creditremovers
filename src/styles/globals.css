@@ -8,27 +8,28 @@
 :root {
   --font-size: 16px;
 
-  /* Brand palette — warm, restrained */
-  --color-ink: #0A1628;          /* warm charcoal navy — primary text */
-  --color-ink-soft: #1A2B45;
-  --color-paper: #FBFAF7;        /* off-white warm cream — page background */
-  --color-paper-soft: #F4F1EA;
-  --color-accent: #0F5132;       /* deep emerald — money green, no neon */
+  /* Brand palette — clean SaaS: navy text, white surfaces, emerald CTAs */
+  --color-ink: #0F172A;          /* slate-900 — primary text */
+  --color-ink-soft: #1E293B;
+  --color-paper: #FFFFFF;        /* pure white — page background */
+  --color-paper-soft: #F8FAFC;   /* slate-50 — alt section band */
+  --color-accent: #0F5132;       /* deep emerald — primary CTA */
   --color-accent-soft: #1A6B47;
-  --color-gold: #B08D57;         /* muted brass — hairline accents only */
+  --color-accent-hover: #0B3D26;
+  --color-gold: #B08D57;         /* kept for back-compat, no longer used */
   --color-gold-soft: #C9A877;
 
-  /* Stone neutrals */
-  --color-stone-50: #F7F5F1;
-  --color-stone-100: #EDEAE3;
-  --color-stone-200: #DCD7CC;
-  --color-stone-300: #BFB7A8;
-  --color-stone-400: #9A917F;
-  --color-stone-500: #76705F;
-  --color-stone-600: #574F40;
-  --color-stone-700: #3F392E;
-  --color-stone-800: #2A251D;
-  --color-stone-900: #1A1611;
+  /* Slate neutrals (cool ramp) */
+  --color-stone-50: #F8FAFC;
+  --color-stone-100: #F1F5F9;
+  --color-stone-200: #E2E8F0;
+  --color-stone-300: #CBD5E1;
+  --color-stone-400: #94A3B8;
+  --color-stone-500: #64748B;
+  --color-stone-600: #475569;
+  --color-stone-700: #334155;
+  --color-stone-800: #1E293B;
+  --color-stone-900: #0F172A;
 
   /* Semantic */
   --color-success: #0F5132;
@@ -76,12 +77,13 @@
   --sidebar-border: var(--color-stone-700);
   --sidebar-ring: var(--color-gold);
 
-  /* Typography */
-  --font-serif: 'Fraunces', 'Times New Roman', serif;
-  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Typography — Poppins everywhere (reviewcleaners-style) */
+  --font-sans:  'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: var(--font-sans);
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }
 
 .dark {
@@ -167,10 +169,6 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
-    /* extremely subtle paper grain — 3% opacity noise */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.09  0 0 0 0 0.16  0 0 0 0.03 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-    background-size: 200px 200px;
-    background-attachment: fixed;
   }
 
   ::selection {
@@ -195,44 +193,42 @@
   }
 }
 
-/* ── Editorial typography ──────────────────────────────────────── */
+/* ── Typography ────────────────────────────────────────────────── */
 @layer base {
   :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
-    h1, h2, h3, h4 {
-      font-family: var(--font-serif);
-      font-weight: 500;
-      letter-spacing: -0.01em;
-      line-height: 1.1;
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
       color: var(--color-ink);
     }
 
     h1 {
-      font-size: clamp(2.5rem, 5.5vw, 4.5rem);
-      letter-spacing: -0.02em;
-      line-height: 1.05;
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
+      letter-spacing: -0.025em;
+      line-height: 1.1;
     }
 
     h2 {
-      font-size: clamp(1.875rem, 3.5vw, 2.75rem);
-      letter-spacing: -0.015em;
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+      letter-spacing: -0.02em;
     }
 
     h3 {
-      font-size: clamp(1.375rem, 2vw, 1.75rem);
+      font-size: clamp(1.25rem, 2vw, 1.5rem);
+      font-weight: 600;
     }
 
     h4 {
       font-size: 1.125rem;
       font-weight: 600;
-      font-family: var(--font-sans);
-      letter-spacing: 0;
-      line-height: 1.4;
     }
 
     p {
       font-size: 1rem;
       font-weight: 400;
-      line-height: 1.6;
+      line-height: 1.65;
       color: var(--color-stone-600);
     }
 
@@ -241,7 +237,6 @@
       font-weight: 500;
       line-height: 1.4;
       color: var(--color-ink);
-      letter-spacing: 0.01em;
     }
 
     button {
@@ -259,44 +254,29 @@
     }
   }
 
-  /* Mobile: heavier headline weight + one notch larger type.
-     Outside the :where() guard so it applies even when elements carry
-     Tailwind text-* / font-* utilities. Uses !important to defeat utility
-     classes; pages that need a different mobile size should opt out by
-     using a utility wrapped in `md:` or `sm:` breakpoint. */
+  /* Mobile typography bump (outside :where so utility classes don't block) */
   @media (max-width: 767px) {
     h1 {
-      font-size: clamp(2.75rem, 8vw, 3.5rem) !important;
-      font-weight: 600 !important;
-      line-height: 1.05 !important;
-    }
-    h2 {
-      font-size: clamp(2.125rem, 6vw, 2.625rem) !important;
-      font-weight: 600 !important;
+      font-size: clamp(2.25rem, 7vw, 3rem) !important;
+      font-weight: 700 !important;
       line-height: 1.1 !important;
     }
-    h3 {
-      font-size: 1.5rem !important;
-      font-weight: 600 !important;
-      line-height: 1.2 !important;
-    }
-    h4 {
-      font-size: 1.1875rem !important;
-      font-weight: 600 !important;
+    h2 {
+      font-size: clamp(1.75rem, 5vw, 2.125rem) !important;
+      font-weight: 700 !important;
     }
     p {
       font-size: 1.0625rem;
-      line-height: 1.65;
+      line-height: 1.7;
     }
   }
 
-  /* Tabular numerals for stats / scores */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* ── Editorial helpers ─────────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────────────── */
 .eyebrow {
   font-family: var(--font-sans);
   font-size: 0.75rem;
@@ -353,19 +333,61 @@
   color: var(--color-ink);
 }
 
-/* Hard-edge button shadow (no soft blur) */
+/* Primary green pill CTA (reviewcleaners-style). Use on <a> and <button>. */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-accent);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 9999px;
+  transition: background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: 0 1px 2px rgba(15, 81, 50, 0.18);
+}
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 81, 50, 0.22);
+}
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #ffffff;
+  color: var(--color-ink);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.8125rem 1.75rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-stone-300);
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+.btn-secondary:hover {
+  border-color: var(--color-ink);
+  background-color: var(--color-stone-50);
+}
+
+/* Soft card shadow */
+.card-soft {
+  background-color: #ffffff;
+  border: 1px solid var(--color-stone-200);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Hard-edge button shadow (legacy editorial style \u2014 retained for back-compat) */
 .btn-press {
-  box-shadow: 0 2px 0 0 var(--color-ink);
   transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-press:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 0 0 var(--color-ink);
-}
-.btn-press:active {
-  transform: translateY(1px);
-  box-shadow: 0 0 0 0 var(--color-ink);
-}
+.btn-press:hover { transform: translateY(-1px); }
+.btn-press:active { transform: translateY(1px); }
 
 /* Reduce motion preference */
 @media (prefers-reduced-motion: reduce) {

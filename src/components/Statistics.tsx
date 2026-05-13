@@ -42,13 +42,9 @@ export function Statistics() {
   }, []);
 
   return (
-    <section ref={ref} className="bg-[var(--color-paper)] border-y border-[var(--color-stone-200)]">
-      <div className="max-w-7xl mx-auto px-6 md:px-10 py-10 md:py-24">
-        <div className="eyebrow mb-4">By the numbers</div>
-        <h2 className="font-serif text-[var(--color-ink)] max-w-2xl mb-16">
-          Quiet, consistent results — measured, not advertised.
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-6">
+    <section ref={ref} className="bg-[var(--color-paper-soft)]">
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-12 md:py-20">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 text-center">
           {STATS.map((s) => <StatCard key={s.label} {...s} run={visible} />)}
         </div>
       </div>
@@ -61,12 +57,12 @@ function StatCard({
 }: { value: number; suffix?: string; prefix?: string; label: string; caption: string; run: boolean }) {
   const v = useCountUp(value, run);
   return (
-    <div className="border-l border-[var(--color-stone-300)] pl-6">
-      <div className="font-serif text-4xl md:text-5xl text-[var(--color-ink)] tabular-nums">
+    <div>
+      <div className="text-4xl md:text-5xl font-bold text-[var(--color-accent)] tabular-nums">
         {prefix}{v.toLocaleString()}{suffix}
       </div>
-      <div className="mt-3 text-xs uppercase tracking-[0.18em] text-[var(--color-stone-700)]">{label}</div>
-      <div className="mt-1 text-sm text-[var(--color-stone-600)]">{caption}</div>
+      <div className="mt-3 text-base font-semibold text-[var(--color-ink)]">{label}</div>
+      <div className="mt-1 text-sm text-[var(--color-stone-500)]">{caption}</div>
     </div>
   );
 }

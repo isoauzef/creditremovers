@@ -257,9 +257,9 @@ app.get("/api/checkout/pricing", (_req, res) => {
   const s = getStripeSettings();
   return res.json({
     monthlyAmountCents: Number(s.stripe_monthly_amount_cents) || 40000,
-    monthlyMonths: Number(s.stripe_monthly_months) || 6,
-    upfrontAmountCents: Number(s.stripe_upfront_amount_cents) || 200000,
-    upfrontSavingsLabel: s.stripe_upfront_savings_label || "Save $400 vs monthly",
+    monthlyMonths: Number(s.stripe_monthly_months) || 3,
+    upfrontAmountCents: Number(s.stripe_upfront_amount_cents) || 100000,
+    upfrontSavingsLabel: s.stripe_upfront_savings_label || "Save $200",
   });
 });
 
@@ -283,7 +283,6 @@ app.post(
       "firstName", "lastName", "email", "phone",
       "addressLine1", "city", "state", "zip",
       "dateOfBirth", "ssn",
-      "signatureName", "signatureDataUrl",
       "paymentPlan",
     ];
     for (const k of required) {
@@ -292,9 +291,7 @@ app.post(
     if (!["monthly", "upfront"].includes(b.paymentPlan)) {
       return res.status(400).json({ message: "Invalid paymentPlan" });
     }
-    if (!req.files?.idDoc?.[0] || !req.files?.billDoc?.[0]) {
-      return res.status(400).json({ message: "ID document and utility bill are required." });
-    }
+    // ID + bill uploads are now optional (clients can upload later in dashboard)
 
     try {
       const ssnRaw = String(b.ssn).replace(/[^0-9]/g, "");
@@ -303,22 +300,26 @@ app.post(
       // Encrypt SSN
       const ssnEnc = await encryptField(ssnRaw);
 
-      // Upload documents
-      const idFile = req.files.idDoc[0];
-      const billFile = req.files.billDoc[0];
+      // Upload documents (optional)
+      const idFile = req.files?.idDoc?.[0] || null;
+      const billFile = req.files?.billDoc?.[0] || null;
 
-      const idDocKey = await secureStorage.putObject({
-        prefix: "id-docs",
-        originalName: idFile.originalname,
-        mimeType: idFile.mimetype,
-        buffer: idFile.buffer,
-      });
-      const billDocKey = await secureStorage.putObject({
-        prefix: "utility-bills",
-        originalName: billFile.originalname,
-        mimeType: billFile.mimetype,
-        buffer: billFile.buffer,
-      });
+      const idDocKey = idFile
+        ? await secureStorage.putObject({
+            prefix: "id-docs",
+            originalName: idFile.originalname,
+            mimeType: idFile.mimetype,
+            buffer: idFile.buffer,
+          })
+        : null;
+      const billDocKey = billFile
+        ? await secureStorage.putObject({
+            prefix: "utility-bills",
+            originalName: billFile.originalname,
+            mimeType: billFile.mimetype,
+            buffer: billFile.buffer,
+          })
+        : null;
 
       const submission = await prisma.checkoutSubmission.create({
         data: {
@@ -340,16 +341,16 @@ app.post(
           ssnLast4: ssnRaw.slice(-4),
 
           idDocS3Key: idDocKey,
-          idDocFilename: idFile.originalname,
-          idDocMimeType: idFile.mimetype,
+          idDocFilename: idFile?.originalname || null,
+          idDocMimeType: idFile?.mimetype || null,
 
           billDocS3Key: billDocKey,
-          billDocFilename: billFile.originalname,
-          billDocMimeType: billFile.mimetype,
+          billDocFilename: billFile?.originalname || null,
+          billDocMimeType: billFile?.mimetype || null,
 
-          signatureName: String(b.signatureName).slice(0, 200),
+          signatureName: b.signatureName ? String(b.signatureName).slice(0, 200) : `${b.firstName} ${b.lastName}`.trim().slice(0, 200),
           signatureDate: b.signatureDate ? new Date(b.signatureDate) : new Date(),
-          signatureDataUrl: String(b.signatureDataUrl).slice(0, 500_000),
+          signatureDataUrl: b.signatureDataUrl ? String(b.signatureDataUrl).slice(0, 500_000) : "",
           authConsent: b.authConsent === "true" || b.authConsent === true,
 
           paymentPlan: b.paymentPlan,
@@ -433,7 +434,7 @@ app.post("/api/checkout/create-subscription", tightLimiter, async (req, res) => 
 
     const s = getStripeSettings();
     const priceId = s.stripe_monthly_price_id;
-    const months = Number(s.stripe_monthly_months) || 6;
+    const months = Number(s.stripe_monthly_months) || 3;
     if (!priceId) return res.status(500).json({ message: "Monthly price not configured (stripe_monthly_price_id)." });
 
     let customerId = submission.stripeCustomerId;

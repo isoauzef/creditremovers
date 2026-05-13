@@ -56,9 +56,9 @@ export default function SettingsPage() {
       keys: [
         { key: "stripe_mode", label: "Mode", type: "select", options: ["test", "live"] },
         { key: "stripe_monthly_amount_cents", label: "Monthly Plan Amount (cents)", hint: "Default 40000 = $400/mo" },
-        { key: "stripe_monthly_months", label: "Monthly Plan Length (months)", hint: "Default 6" },
-        { key: "stripe_upfront_amount_cents", label: "Upfront Plan Amount (cents)", hint: "Default 200000 = $2,000" },
-        { key: "stripe_upfront_savings_label", label: "Upfront Savings Label", hint: "e.g. Save $400" },
+        { key: "stripe_monthly_months", label: "Monthly Plan Length (months)", hint: "Default 3" },
+        { key: "stripe_upfront_amount_cents", label: "Upfront Plan Amount (cents)", hint: "Default 100000 = $1,000" },
+        { key: "stripe_upfront_savings_label", label: "Upfront Savings Label", hint: "e.g. Save $200" },
         { key: "stripe_monthly_price_id", label: "Monthly Stripe Price ID", hint: "price_... — required for monthly plan" },
         { key: "stripe_test_publishable_key", label: "Test Publishable Key" },
         { key: "stripe_test_secret_key", label: "Test Secret Key" },

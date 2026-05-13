@@ -29,9 +29,9 @@ const settings = [
   { key: "stripe_live_secret_key", value: process.env.STRIPE_LIVE_SECRET_KEY || "", group: "stripe" },
   { key: "stripe_live_webhook_secret", value: process.env.STRIPE_LIVE_WEBHOOK_SECRET || "", group: "stripe" },
   { key: "stripe_monthly_amount_cents", value: process.env.STRIPE_MONTHLY_AMOUNT_CENTS || "40000", group: "stripe" },
-  { key: "stripe_monthly_months", value: process.env.STRIPE_MONTHLY_MONTHS || "6", group: "stripe" },
-  { key: "stripe_upfront_amount_cents", value: process.env.STRIPE_UPFRONT_AMOUNT_CENTS || "200000", group: "stripe" },
-  { key: "stripe_upfront_savings_label", value: process.env.STRIPE_UPFRONT_SAVINGS_LABEL || "Save $400", group: "stripe" },
+  { key: "stripe_monthly_months", value: process.env.STRIPE_MONTHLY_MONTHS || "3", group: "stripe" },
+  { key: "stripe_upfront_amount_cents", value: process.env.STRIPE_UPFRONT_AMOUNT_CENTS || "100000", group: "stripe" },
+  { key: "stripe_upfront_savings_label", value: process.env.STRIPE_UPFRONT_SAVINGS_LABEL || "Save $200", group: "stripe" },
   { key: "stripe_monthly_price_id", value: process.env.STRIPE_MONTHLY_PRICE_ID || "", group: "stripe" },
 
   { key: "smtp_host", value: process.env.SMTP_HOST || "", group: "smtp" },
@@ -128,13 +128,13 @@ const emailTemplates = [
   {
     slug: "program-completed",
     name: "Program Completed",
-    subject: "Your 6-month program is complete",
+    subject: "Your 3-month program is complete",
     previewText: "Your subscription has automatically ended. Here's a recap.",
     content: {
       brand,
       greetingPrefix: "Congratulations,",
       paragraphs: [
-        "Your six-month engagement with Credit Removers is now complete and your subscription has automatically closed — no further charges will be made.",
+        "Your three-month engagement with Credit Removers is now complete and your subscription has automatically closed — no further charges will be made.",
         "Total invested: {{totalPaid}}. Your full round-by-round history will remain available in your portal for your records.",
         "If you'd like to continue with another engagement (a new round of disputes, identity-monitoring guidance, or post-cleanup credit-building strategy), reply to this email and we'll set you up.",
       ],
@@ -151,7 +151,7 @@ const emailTemplates = [
       brand,
       greetingPrefix: "Hi",
       paragraphs: [
-        "We tried to process this month's payment ({{monthsBilled}} of 6) and it was declined by your bank. Common reasons: expired card, insufficient funds, or a fraud-prevention block.",
+        "We tried to process this month's payment ({{monthsBilled}} of 3) and it was declined by your bank. Common reasons: expired card, insufficient funds, or a fraud-prevention block.",
         "Your file is paused until we can collect the payment. Please update your card from your portal — we'll automatically retry and resume disputes immediately.",
       ],
       cta: { label: "Update payment method", href: "https://creditremovers.com/account" },
@@ -176,8 +176,8 @@ const pageContent = [
       items: [
         { value: "11+ years", label: "Repairing credit since 2014" },
         { value: "12,400+", label: "Items removed for clients" },
-        { value: "+87 pts", label: "Average score lift in 6 months" },
-        { value: "98.4%", label: "Client retention through month 6" },
+        { value: "+87 pts", label: "Average score lift in 3 months" },
+        { value: "98.4%", label: "Client retention through month 3" },
       ],
     },
   },
@@ -214,7 +214,7 @@ const pageContent = [
     page: "homepage", section: "faq", content: {
       heading: "Frequently asked",
       items: [
-        { q: "How long does it take?", a: "Most clients see meaningful movement by round 2 (around day 60). The full program is six months — long enough to work every viable item to completion." },
+        { q: "How long does it take?", a: "Most clients see meaningful movement by round 2 (around day 60). The full program is three months — long enough to work every viable item to completion." },
         { q: "Do you guarantee results?", a: "Federal law (CROA) prohibits us from guaranteeing outcomes. What we guarantee is the work: every viable item, every round, by name." },
         { q: "Is this legal?", a: "Yes. We are a CROA-registered credit repair organization. You can dispute items yourself for free; we do it for you with processes refined over a decade." },
         { q: "What about my data?", a: "Your SSN is encrypted with AWS KMS envelope encryption. Documents live in S3 with SSE-KMS. Only you and a vetted analyst with logged, audited access ever touch your file." },
@@ -248,10 +248,10 @@ const pageContent = [
     page: "checkout", section: "plans", content: {
       heading: "Choose how to pay",
       subheading: "Same scope of work. Pick the cadence that fits your cash flow.",
-      monthlyTitle: "Monthly", monthlyAmount: "$400", monthlyCadence: "× 6 months",
-      monthlyNote: "Auto-cancels at month 6. Cancel within 3 business days at no cost.",
-      upfrontTitle: "Upfront", upfrontAmount: "$2,000", upfrontCadence: "paid in full",
-      upfrontNote: "Save $400. One payment, full six-month program.",
+      monthlyTitle: "Monthly", monthlyAmount: "$400", monthlyCadence: "× 3 months",
+      monthlyNote: "Auto-cancels at month 3. Cancel within 3 business days at no cost.",
+      upfrontTitle: "Upfront", upfrontAmount: "$1,000", upfrontCadence: "paid in full",
+      upfrontNote: "Save $200. One payment, full three-month program.",
     },
   },
   {
