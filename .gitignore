@@ -1,0 +1,10 @@
+/node_modules
+/build
+.env
+.env.backup
+server/data/contact-submissions.json
+private-uploads/
+deploy-prod.patch
+deploy-prod.tar.gz
+.copilot
+/generated/prisma

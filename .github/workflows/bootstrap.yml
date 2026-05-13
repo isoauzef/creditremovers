@@ -1,0 +1,60 @@
+name: Bootstrap Production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: creditremovers-production
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      APP_DOMAIN: creditremovers.com
+      APP_NAME: creditremovers-app
+      APP_PORT: "4174"
+      APP_ROOT: /var/www/creditremovers
+      BRANCH: main
+      MYSQL_DATABASE: creditremovers
+      MYSQL_USER: creditremovers
+      REPO_URL: https://github.com/isoauzef/creditremovers.git
+      SHARED_ROOT: /var/www/creditremovers-shared
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Bootstrap production server
+        shell: bash
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          LETSENCRYPT_EMAIL: ${{ secrets.LETSENCRYPT_EMAIL }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+        run: |
+          cat > /tmp/creditremovers.env <<'EOF'
+          ${PROD_ENV_FILE}
+          EOF
+          PROD_ENV_FILE_B64="$(base64 -w0 /tmp/creditremovers.env)"
+
+          remote_env=()
+          for name in APP_DOMAIN APP_NAME APP_PORT APP_ROOT BRANCH REPO_URL SHARED_ROOT MYSQL_DATABASE MYSQL_USER LETSENCRYPT_EMAIL MYSQL_PASSWORD PROD_ENV_FILE_B64; do
+            printf -v quoted '%q' "${!name}"
+            remote_env+=("$name=$quoted")
+          done
+
+          ssh "$SSH_USER@$SSH_HOST" "$(printf '%s ' "${remote_env[@]}")bash -s" < scripts/bootstrap-server.sh
